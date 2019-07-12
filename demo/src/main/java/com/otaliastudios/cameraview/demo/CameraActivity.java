@@ -11,11 +11,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.otaliastudios.cameraview.CameraListener;
 import com.otaliastudios.cameraview.CameraLogger;
 import com.otaliastudios.cameraview.CameraOptions;
+import com.otaliastudios.cameraview.CameraOrientation;
 import com.otaliastudios.cameraview.CameraView;
 import com.otaliastudios.cameraview.SessionType;
 import com.otaliastudios.cameraview.Size;
@@ -43,8 +45,10 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         setContentView(R.layout.activity_camera);
         CameraLogger.setLogLevel(CameraLogger.LEVEL_VERBOSE);
 
+        final TextView orientationTextView = findViewById(R.id.orientationTextView);
         camera = findViewById(R.id.camera);
         camera.setLifecycleOwner(this);
+        camera.setAllowedOrientation(CameraOrientation.LANDSCAPE);
         camera.addCameraListener(new CameraListener() {
             public void onCameraOpened(CameraOptions options) { onOpened(); }
             public void onPictureTaken(byte[] jpeg) { onPicture(jpeg); }
@@ -53,6 +57,13 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
             public void onVideoTaken(File video) {
                 super.onVideoTaken(video);
                 onVideo(video);
+            }
+
+            @Override
+            public void onOrientationChanged(int orientation) {
+                orientationTextView.setText("Orientation " + orientation);
+                float controlsRotation = 360 - orientation;
+                orientationTextView.setRotation(controlsRotation);
             }
         });
 

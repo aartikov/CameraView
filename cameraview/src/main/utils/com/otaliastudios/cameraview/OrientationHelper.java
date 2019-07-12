@@ -13,8 +13,10 @@ class OrientationHelper {
     final OrientationEventListener mListener;
 
     private final Callback mCallback;
+    private int mRawOrientation = OrientationEventListener.ORIENTATION_UNKNOWN;
     private int mDeviceOrientation = -1;
     private int mDisplayOffset = -1;
+    private CameraOrientation mAllowedOrientation = CameraOrientation.ANY;
 
     interface Callback {
         void onDeviceOrientationChanged(int deviceOrientation);
@@ -26,35 +28,78 @@ class OrientationHelper {
 
             @Override
             public void onOrientationChanged(int orientation) {
-                int or = 0;
-                if (orientation == OrientationEventListener.ORIENTATION_UNKNOWN) {
-                    or = 0;
-                } else if (orientation >= 315 || orientation < 45) {
-                    or = 0;
-                } else if (orientation >= 45 && orientation < 135) {
-                    or = 90;
-                } else if (orientation >= 135 && orientation < 225) {
-                    or = 180;
-                } else if (orientation >= 225 && orientation < 315) {
-                    or = 270;
+                if (orientation != ORIENTATION_UNKNOWN) {
+                    mRawOrientation = orientation;
                 }
-
-                if (or != mDeviceOrientation) {
-                    mDeviceOrientation = or;
-                    mCallback.onDeviceOrientationChanged(mDeviceOrientation);
-                }
+                handleOrientationChange();
             }
         };
+    }
+
+    private void handleOrientationChange() {
+        int newDeviceOrientation = calculateDeviceOrientation(mAllowedOrientation, mRawOrientation, mDeviceOrientation);
+        if (newDeviceOrientation != mDeviceOrientation) {
+            mDeviceOrientation = newDeviceOrientation;
+            mCallback.onDeviceOrientationChanged(mDeviceOrientation);
+        }
+    }
+
+    private static int calculateDeviceOrientation(CameraOrientation allowedOrientation, int rawOrientation, int previousOrientation) {
+        if (allowedOrientation == CameraOrientation.ANY) {
+            if (rawOrientation == OrientationEventListener.ORIENTATION_UNKNOWN) {
+                return 0;
+            } else if (rawOrientation >= 315 || rawOrientation < 45) {
+                return 0;
+            } else if (rawOrientation >= 45 && rawOrientation < 135) {
+                return 90;
+            } else if (rawOrientation >= 135 && rawOrientation < 225) {
+                return 180;
+            } else {
+                return 270;
+            }
+        } else if (allowedOrientation == CameraOrientation.LANDSCAPE) {
+            if (rawOrientation == OrientationEventListener.ORIENTATION_UNKNOWN) {
+                return 90;
+            } else if (rawOrientation >= 45 && rawOrientation < 135) {
+                return 90;
+            } else if (rawOrientation > 255 && rawOrientation < 315) {
+                return 270;
+            } else {
+                return previousOrientation == 90 || previousOrientation == 270 ? previousOrientation : 90;
+            }
+        } else if (allowedOrientation == CameraOrientation.PORTRAIT) {
+            if (rawOrientation == OrientationEventListener.ORIENTATION_UNKNOWN) {
+                return 0;
+            } else if (rawOrientation >= 315 || rawOrientation < 45) {
+                return 0;
+            } else if (rawOrientation > 135 && rawOrientation < 255) {
+                return 180;
+            } else {
+                return previousOrientation == 0 || previousOrientation == 180 ? previousOrientation : 0;
+            }
+        } else {
+            return 0;   // unreachable
+        }
     }
 
     void enable(Context context) {
         Display display = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
         switch (display.getRotation()) {
-            case Surface.ROTATION_0: mDisplayOffset = 0; break;
-            case Surface.ROTATION_90: mDisplayOffset = 90; break;
-            case Surface.ROTATION_180: mDisplayOffset = 180; break;
-            case Surface.ROTATION_270: mDisplayOffset = 270; break;
-            default: mDisplayOffset = 0; break;
+            case Surface.ROTATION_0:
+                mDisplayOffset = 0;
+                break;
+            case Surface.ROTATION_90:
+                mDisplayOffset = 90;
+                break;
+            case Surface.ROTATION_180:
+                mDisplayOffset = 180;
+                break;
+            case Surface.ROTATION_270:
+                mDisplayOffset = 270;
+                break;
+            default:
+                mDisplayOffset = 0;
+                break;
         }
         mListener.enable();
     }
@@ -66,10 +111,21 @@ class OrientationHelper {
     }
 
     int getDeviceOrientation() {
-        return mDeviceOrientation;
+        return mDeviceOrientation == -1 ? 0 : mDeviceOrientation;
     }
 
     int getDisplayOffset() {
-        return mDisplayOffset;
+        return mDisplayOffset == -1 ? 0 : mDisplayOffset;
+    }
+
+    public CameraOrientation getAllowedOrientation() {
+        return mAllowedOrientation;
+    }
+
+    public void setAllowedOrientation(CameraOrientation allowedOrientation) {
+        if (mAllowedOrientation != allowedOrientation) {
+            mAllowedOrientation = allowedOrientation;
+            handleOrientationChange();
+        }
     }
 }

@@ -29,6 +29,14 @@
         app:cameraJpegQuality="100"
         app:cameraSessionType="picture" />
 
+    <TextView
+        android:id="@+id/orientationTextView"
+        android:textSize="16sp"
+        android:textColor="#2196F3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"/>
+
     <!-- Controls -->
     <LinearLayout
         android:layout_width="match_parent"

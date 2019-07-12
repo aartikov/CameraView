@@ -575,7 +575,7 @@ public class CameraView extends FrameLayout implements LifecycleObserver {
 
     /**
      * Checks that we have appropriate permissions for this session type.
-     * Throws if session = audio and manifest did not add the microphone permissions.     
+     * Throws if session = audio and manifest did not add the microphone permissions.
      * @param sessionType the sessionType to be checked
      * @param audio the audio setting to be checked
      * @return true if we can go on, false otherwise.
@@ -1478,6 +1478,18 @@ public class CameraView extends FrameLayout implements LifecycleObserver {
      */
     public boolean isCapturingVideo(){
         return mCameraController.isCapturingVideo();
+    }
+
+    public CameraOrientation getAllowedOrientation() {
+        return mOrientationHelper.getAllowedOrientation();
+    }
+
+    public void setAllowedOrientation(CameraOrientation allowedOrientation) {
+        mOrientationHelper.setAllowedOrientation(allowedOrientation);
+    }
+
+    public int getOrientationInDegrees() {
+        return mOrientationHelper.getDeviceOrientation();
     }
 
     //endregion
